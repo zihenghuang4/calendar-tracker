@@ -32,6 +32,41 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
+If using conda/miniconda:
+Create and activate environment:
+
+```bash
+cd calendar-tracker
+
+# Create new conda environment with Python 3.11
+conda create -n calendar-tracker python=3.11
+
+# Activate it
+conda activate calendar-tracker
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+Running the app:
+
+```bash
+# Make sure environment is activated
+conda activate calendar-tracker
+
+# Test setup
+python test_setup.py
+
+# Launch dashboard
+streamlit run app.py
+```
+
+Deactivate when done:
+
+```bash
+conda deactivate
+```
+
 ## Step 2: Set Up Google Calendar API Access
 
 ### 2.1 Create a Google Cloud Project
@@ -71,7 +106,18 @@ pip install -r requirements.txt
    - Click the download icon next to your newly created OAuth client
    - Save the file as `credentials.json` in the `calendar-tracker` directory
 
-### 2.4 Verify File Structure
+### 2.4 Add Test User
+
+1. Go to Google Cloud Console: https://console.cloud.google.com/
+2. Select your "Calendar Tracker" project (top dropdown)
+3. Navigate to OAuth Consent Screen:
+   - Left menu → "APIs & Services" → "OAuth consent screen"
+4. Go to "Audience" section and then find "Test users"
+5. Click "ADD USERS"
+6. Enter your Google email address (the one you're trying to log in with)
+7. Click "Save"
+
+### 2.5 Verify File Structure
 
 Your directory should look like this:
 
@@ -93,6 +139,7 @@ Google Calendar uses numeric color IDs (1-11) for event colors. You need to map 
 ### 3.1 Find Your Color IDs
 
 1. Run the app for the first time:
+
    ```bash
    streamlit run app.py
    ```
@@ -140,7 +187,7 @@ The dashboard will open in your browser (usually at `http://localhost:8501`)
 1. **Select View Type**: Choose Daily, Weekly, or Monthly
 2. **Pick Date Range**: Select the specific date/week/month
 3. **Calculate Metrics**: Click the "Calculate Metrics" button
-4. **View Results**: 
+4. **View Results**:
    - Total tracked time
    - Deep work hours (Work + Personal Projects)
    - Category breakdown with charts
@@ -149,24 +196,29 @@ The dashboard will open in your browser (usually at `http://localhost:8501`)
 ## Troubleshooting
 
 ### "credentials.json not found"
+
 - Make sure you downloaded the OAuth credentials from Google Cloud Console
 - Place the file in the `calendar-tracker` directory (not in `src/`)
 
 ### "Token has been expired or revoked"
+
 - Delete `token.pickle` and run the app again
 - Re-authorize when prompted
 
 ### Events showing as "Uncategorized"
+
 - Your color IDs in `config.py` don't match your actual calendar colors
 - Use the Debug section to find the correct color IDs
 - Update `COLOR_CATEGORIES` in `config.py`
 
 ### "No events found"
+
 - Make sure you have events in your calendar for the selected date range
 - Check that you're using the correct calendar (defaults to 'primary')
 - Verify the events have colors assigned in Google Calendar
 
 ### Import errors
+
 - Make sure all dependencies are installed: `pip install -r requirements.txt`
 - If using a virtual environment, make sure it's activated
 
@@ -174,7 +226,7 @@ The dashboard will open in your browser (usually at `http://localhost:8501`)
 
 Once everything is working, you can:
 
-1. **Add more features**: 
+1. **Add more features**:
    - Export data to CSV
    - Set goals and track progress
    - Compare weeks/months
@@ -192,6 +244,7 @@ Once everything is working, you can:
 ## Getting Help
 
 If you run into issues:
+
 1. Check the error message carefully
 2. Verify all setup steps were completed
 3. Use the Debug section in the dashboard to inspect your events
