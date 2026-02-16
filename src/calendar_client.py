@@ -116,6 +116,11 @@ class CalendarClient:
         duration = (end_dt - start_dt).total_seconds() / \
             3600  # Convert to hours
         return duration
+        if 'T' not in start:
+            # All-day event - return the date at midnight
+            return datetime.fromisoformat(start).replace(tzinfo=pytz.utc)
+
+        return datetime.fromisoformat(start.replace('Z', '+00:00'))
 
     def get_event_color(self, event):
         """

@@ -11,10 +11,10 @@ COLOR_CATEGORIES = {
     # Update these mappings based on your actual Google Calendar color IDs
     '5': 'Personal Development',  # Yellow
     '10': 'Work',                 # Green
-    '9': 'Personal Projects',     # Blue
-    '8': 'Chores & Misc',        # Grey
+    '7': 'Personal Projects',     # Blue
+    None: 'Chores & Misc',        # Grey
     '11': 'Wasted Time',          # Red
-    
+
     # Add alternative mappings if needed
     # '1': 'Personal Development',
     # '2': 'Work',
