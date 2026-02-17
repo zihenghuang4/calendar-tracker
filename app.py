@@ -2,6 +2,8 @@
 Streamlit Dashboard for Calendar Time Tracker
 """
 
+from metrics import TimeTracker
+from calendar_client import CalendarClient
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -13,8 +15,6 @@ import os
 # Add src directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
-from calendar_client import CalendarClient
-from metrics import TimeTracker
 
 # Page configuration
 st.set_page_config(
@@ -58,13 +58,13 @@ if view_type == "Daily":
         "Select Date",
         value=datetime.now()
     )
-    
+
 elif view_type == "Weekly":
     selected_date = st.sidebar.date_input(
         "Week Starting",
         value=datetime.now() - timedelta(days=datetime.now().weekday())
     )
-    
+
 else:  # Monthly
     col1, col2 = st.sidebar.columns(2)
     selected_month = col1.selectbox(
@@ -89,21 +89,21 @@ if st.sidebar.button("Calculate Metrics", type="primary"):
                 )
                 st.session_state.current_metrics = metrics
                 st.session_state.view_type = "Daily"
-                
+
             elif view_type == "Weekly":
                 metrics = st.session_state.tracker.calculate_weekly_metrics(
                     datetime.combine(selected_date, datetime.min.time())
                 )
                 st.session_state.current_metrics = metrics
                 st.session_state.view_type = "Weekly"
-                
+
             else:  # Monthly
                 metrics = st.session_state.tracker.calculate_monthly_metrics(
                     selected_year, selected_month
                 )
                 st.session_state.current_metrics = metrics
                 st.session_state.view_type = "Monthly"
-            
+
             st.success("Metrics calculated successfully!")
         except Exception as e:
             st.error(f"Error calculating metrics: {str(e)}")
@@ -111,55 +111,66 @@ if st.sidebar.button("Calculate Metrics", type="primary"):
 # Display metrics if available
 if 'current_metrics' in st.session_state:
     metrics = st.session_state.current_metrics
-    
+
     # Display date range
     if st.session_state.view_type == "Daily":
         st.subheader(f"Metrics for {metrics['date'].strftime('%B %d, %Y')}")
     elif st.session_state.view_type == "Weekly":
-        st.subheader(f"Weekly Metrics: {metrics['start_date'].strftime('%b %d')} - {metrics['end_date'].strftime('%b %d, %Y')}")
+        st.subheader(
+            f"Weekly Metrics: {metrics['start_date'].strftime('%b %d')} - {metrics['end_date'].strftime('%b %d, %Y')}")
     else:
-        st.subheader(f"Monthly Metrics: {datetime(metrics['year'], metrics['month'], 1).strftime('%B %Y')}")
-    
+        st.subheader(
+            f"Monthly Metrics: {datetime(metrics['year'], metrics['month'], 1).strftime('%B %Y')}")
+
     # Key metrics row
-    col1, col2, col3 = st.columns(3)
-    
+    col1, col2, col3, col4 = st.columns(4)
+
     with col1:
         st.metric(
             "Total Tracked Time",
             f"{metrics['total_hours']:.1f} hrs"
         )
-    
+
     with col2:
         st.metric(
             "Deep Work Time",
             f"{metrics['deep_work_hours']:.1f} hrs"
         )
-    
+
     with col3:
         if metrics['total_hours'] > 0:
-            deep_work_percentage = (metrics['deep_work_hours'] / metrics['total_hours']) * 100
+            deep_work_percentage = (
+                metrics['deep_work_hours'] / metrics['total_hours']) * 100
         else:
             deep_work_percentage = 0
         st.metric(
             "Deep Work %",
             f"{deep_work_percentage:.1f}%"
         )
-    
+
+    with col4:
+        if st.session_state.view_type == 'Weekly':
+            avg_daily = metrics['deep_work_hours'] / 7
+            st.metric(
+                "Avg Daily Deep Work",
+                f"{avg_daily:.2f} hrs"
+            )
+
     st.divider()
-    
+
     # Category breakdown
     col1, col2 = st.columns(2)
-    
+
     with col1:
         st.subheader("Time by Category")
-        
+
         if metrics['category_hours']:
             # Create DataFrame
             df = pd.DataFrame([
                 {'Category': cat, 'Hours': hrs}
                 for cat, hrs in metrics['category_hours'].items()
             ]).sort_values('Hours', ascending=False)
-            
+
             # Display table
             st.dataframe(
                 df,
@@ -168,10 +179,10 @@ if 'current_metrics' in st.session_state:
             )
         else:
             st.info("No events found for this period")
-    
+
     with col2:
         st.subheader("Category Distribution")
-        
+
         if metrics['category_hours']:
             # Pie chart
             fig = px.pie(
@@ -181,12 +192,12 @@ if 'current_metrics' in st.session_state:
                 title='Time Distribution'
             )
             st.plotly_chart(fig, use_container_width=True)
-    
+
     # Daily breakdown for weekly/monthly views
     if st.session_state.view_type in ["Weekly", "Monthly"] and 'daily_metrics' in metrics:
         st.divider()
         st.subheader("Daily Breakdown")
-        
+
         # Prepare daily data
         daily_data = []
         for day_metric in metrics['daily_metrics']:
@@ -199,9 +210,9 @@ if 'current_metrics' in st.session_state:
             for cat, hrs in day_metric['category_hours'].items():
                 row[cat] = hrs
             daily_data.append(row)
-        
+
         daily_df = pd.DataFrame(daily_data)
-        
+
         # Line chart
         fig = go.Figure()
         fig.add_trace(go.Scatter(
@@ -223,7 +234,7 @@ if 'current_metrics' in st.session_state:
             hovermode='x unified'
         )
         st.plotly_chart(fig, use_container_width=True)
-        
+
         # Daily table
         st.dataframe(daily_df, use_container_width=True, hide_index=True)
 
@@ -232,20 +243,22 @@ else:
 
 # Debug section (collapsible)
 with st.expander("🔍 Debug: View Color Mappings"):
-    st.write("Use this section to identify your Google Calendar color IDs and update config.py")
-    
+    st.write(
+        "Use this section to identify your Google Calendar color IDs and update config.py")
+
     debug_date = st.date_input("Select date to inspect", value=datetime.now())
-    
+
     if st.button("Show Events"):
         start = datetime.combine(debug_date, datetime.min.time())
         end = start + timedelta(days=1)
-        
-        events = st.session_state.tracker.get_events_with_categories(start, end)
-        
+
+        events = st.session_state.tracker.get_events_with_categories(
+            start, end)
+
         if events:
             debug_df = pd.DataFrame(events)
             st.dataframe(debug_df, use_container_width=True)
-            
+
             st.info("""
             **Update config.py with your color IDs:**
             
