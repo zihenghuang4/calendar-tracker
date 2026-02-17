@@ -1,9 +1,7 @@
 """
 Streamlit Dashboard for Calendar Time Tracker
 """
-# fmt: on
-from calendar_client import CalendarClient
-from metrics import TimeTracker
+# fmt: off
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -15,7 +13,9 @@ import os
 # Add src directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
-# fmt: off
+from calendar_client import CalendarClient
+from metrics import TimeTracker
+# fmt: on
 
 
 # Page configuration
@@ -219,7 +219,8 @@ if 'current_metrics' in st.session_state:
             weekly_rows = []
             for week_num, i in enumerate(range(0, len(daily_df), 7), 1):
                 week_slice = daily_df.iloc[i:i+7]
-                row = {'Week': f"Week {week_num} ({week_slice['Date'].iloc[0]} – {week_slice['Date'].iloc[-1]})"}
+                row = {
+                    'Week': f"Week {week_num} ({week_slice['Date'].iloc[0]} – {week_slice['Date'].iloc[-1]})"}
                 for col in week_slice.columns:
                     if col != 'Date':
                         row[col] = round(week_slice[col].mean(), 2)
@@ -227,9 +228,11 @@ if 'current_metrics' in st.session_state:
 
             weekly_df = pd.DataFrame(weekly_rows)
 
-            category_cols = [c for c in weekly_df.columns if c not in ['Week', 'Total Hours', 'Deep Work']]
+            category_cols = [c for c in weekly_df.columns if c not in [
+                'Week', 'Total Hours', 'Deep Work']]
             fig2 = px.bar(
-                weekly_df.melt(id_vars='Week', value_vars=category_cols, var_name='Category', value_name='Avg Hours/Day'),
+                weekly_df.melt(id_vars='Week', value_vars=category_cols,
+                               var_name='Category', value_name='Avg Hours/Day'),
                 x='Week', y='Avg Hours/Day', color='Category', barmode='group',
                 title='7-Day Avg Hours per Day by Category'
             )
@@ -238,7 +241,6 @@ if 'current_metrics' in st.session_state:
 
         st.divider()
         st.subheader("Daily Breakdown")
-
 
         # Line chart
         fig = go.Figure()
