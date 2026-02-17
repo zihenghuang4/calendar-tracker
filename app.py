@@ -1,9 +1,9 @@
 """
 Streamlit Dashboard for Calendar Time Tracker
 """
-
-from metrics import TimeTracker
+# fmt: on
 from calendar_client import CalendarClient
+from metrics import TimeTracker
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -14,6 +14,8 @@ import os
 
 # Add src directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+
+# fmt: off
 
 
 # Page configuration
@@ -195,9 +197,6 @@ if 'current_metrics' in st.session_state:
 
     # Daily breakdown for weekly/monthly views
     if st.session_state.view_type in ["Weekly", "Monthly"] and 'daily_metrics' in metrics:
-        st.divider()
-        st.subheader("Daily Breakdown")
-
         # Prepare daily data
         daily_data = []
         for day_metric in metrics['daily_metrics']:
@@ -212,6 +211,34 @@ if 'current_metrics' in st.session_state:
             daily_data.append(row)
 
         daily_df = pd.DataFrame(daily_data)
+
+        if st.session_state.view_type == "Monthly":
+            st.divider()
+            st.subheader("7-Day Averages (per day)")
+
+            weekly_rows = []
+            for week_num, i in enumerate(range(0, len(daily_df), 7), 1):
+                week_slice = daily_df.iloc[i:i+7]
+                row = {'Week': f"Week {week_num} ({week_slice['Date'].iloc[0]} – {week_slice['Date'].iloc[-1]})"}
+                for col in week_slice.columns:
+                    if col != 'Date':
+                        row[col] = round(week_slice[col].mean(), 2)
+                weekly_rows.append(row)
+
+            weekly_df = pd.DataFrame(weekly_rows)
+
+            category_cols = [c for c in weekly_df.columns if c not in ['Week', 'Total Hours', 'Deep Work']]
+            fig2 = px.bar(
+                weekly_df.melt(id_vars='Week', value_vars=category_cols, var_name='Category', value_name='Avg Hours/Day'),
+                x='Week', y='Avg Hours/Day', color='Category', barmode='group',
+                title='7-Day Avg Hours per Day by Category'
+            )
+            st.plotly_chart(fig2, use_container_width=True)
+            st.dataframe(weekly_df, use_container_width=True, hide_index=True)
+
+        st.divider()
+        st.subheader("Daily Breakdown")
+
 
         # Line chart
         fig = go.Figure()
